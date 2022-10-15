@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from math import pi
+import gc
+import tensorflow.keras.backend as K
 from sklearn import preprocessing
 
 plt.rcParams['figure.figsize'] = (20, 8)
@@ -160,17 +162,17 @@ print('Data Loaded ! \n')
 # Preprocessing: Shuffling
 (traces, intermediate_values, plaintext) = shuffle_data(traces, intermediate_values, plaintext)
 
+# Preprocessing: Normalization (zero mean, unit variance)
+scaler = preprocessing.StandardScaler()
+traces = scaler.fit_transform(traces)
+traces = traces.astype('float32')
+
 # Configuration of the attack dataset
 X = traces[:Nt,:]
 Y = intermediate_values[:Nt,targeted_byte]
 plaintext = plaintext[:Nt,targeted_byte]
 key = key[targeted_byte] * np.ones(plaintext.shape, dtype=int)
 print('Traces loaded !')
-
-# Preprocessing: Normalization (zero mean, unit variance)
-scaler = preprocessing.StandardScaler()
-X = scaler.fit_transform(X)
-X = X.astype('float32')
 
 print('\n############### Model cVAE-SA ###############\n')
 encoder_st = tf.keras.models.load_model(trained_models_folder+'encoder')
@@ -191,37 +193,41 @@ print("Targeted Sample = ", targeted_sample)
 #################################################
 #################################################
 
-# This process is described in Sec3.4 of the paper
-predictions = np.zeros((256, Nv))
+#This process is described in Sec3.4 of the paper
+predictions = np.zeros((256))
 for k in range(256):
 
     # 1 - The evaluator computes the label Y = f(X, k) by mixing the known plaintext and the key hypothesis
     empty_profiling_basis = fast_monomial_orthonormal_basis(np.ones((X.shape[0], X.shape[1])), plaintext, k*np.ones(plaintext.shape, dtype=int), base_u-1)
-
+    gen_X = np.zeros((Nv, X.shape[0], X.shape[1]))
 
     for j in range(Nv):
         # 2 - Estimation of the parameters v_mean, v_log_sigma through the application of the encoder and, computation of the v_sample latent representation
         v_mean, v_log_sigma, v_sample = encoder_st.predict([X, empty_profiling_basis])
 
         # 3 - Generation of the synthetic trace for a given latent representation v_sample and the hypothetical targeted variable Y
-        gen_X = decoder_st.predict([v_sample, empty_profiling_basis])
+        gen_X[j] = decoder_st.predict([v_sample, empty_profiling_basis])
+    gen_X_mean = np.mean(gen_X, axis=0)
 
-        # 4 - Computation of the similarity term
-        if (targeted_sample != 0):
-            rec_error = 0.5 * np.log2(2 * pi * (X[:, targeted_sample] - gen_X[:, targeted_sample])**2) + 0.5
-        else:
-            rec_error = 0.5 * np.log2(2 * pi * np.sum((X[:] - gen_X[:])**2, axis=1)) + 0.5
+    # 4 - Computation of the similarity term
+    if (targeted_sample != 0):
+        rec_error = 0.5 * np.log2(2 * pi * (X[:, targeted_sample] - gen_X_mean[:, targeted_sample])**2) + 0.5
+    else:
+        rec_error = 0.5 * np.log2(2 * pi * np.sum((X[:] - gen_X_mean[:])**2, axis=1)) + 0.5
 
-        # 5 - Computation of the KL-divergence term
-        kl_error = -0.5 * (1 + v_log_sigma - np.square(v_mean) - np.exp(v_log_sigma))
-        predictions[k,j] = np.mean(rec_error + np.sum(kl_error, axis=1))
+    # 5 - Computation of the KL-divergence term
+    kl_error = -0.5 * np.sum((1 + v_log_sigma - np.square(v_mean) - np.exp(v_log_sigma)), axis=1)
+
+    predictions[k] = -np.sum(rec_error + kl_error)
     print("Key %s Guessed !"%k)
 
 # 6 - Guess the secret key byte value
-similarity_score = -np.sum(predictions, axis=1)
-key_guessed = np.argmax(similarity_score)
+key_guessed = np.argmax(predictions)
 
-print("Sorted Similarity Score = ", np.sort(similarity_score))
-print("Similarity Score of the True Key = ", similarity_score[key[0]])
+print("Sorted Similarity Score = ", np.sort(predictions))
+print("Similarity Score of the True Key = ", predictions[key[0]])
 print("Key Guessed = ", key_guessed)
 print("True Key = ", key[0])
+
+K.clear_session()
+gc.collect()

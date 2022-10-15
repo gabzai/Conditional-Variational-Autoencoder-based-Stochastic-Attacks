@@ -145,13 +145,13 @@ trained_models_folder = root+"trained_models/"
 history_folder = root+"training_history/"
 
 # Settings & Hyperparameters
-nb_epochs = 50
-batch_size = 32
+nb_epochs = 30
+batch_size = 10
 learning_rate = 0.01
 targeted_byte = 0
 base_u = 257 # (F(1) => base_u=1 / F(2) => base_u=9 / F(3) => base_u=38 / F(4) => base_u=94 / F(5) => base_u=164 / F(6) => base_u=220 / F(7) => base_u=248 / F(8) => base_u=256 / F(9) => base_u=257)
 scenario="scenario4"
-noise = "low_noise"
+noise = "high_noise"
 
 input_size = 3
 train_data_len = 9000
