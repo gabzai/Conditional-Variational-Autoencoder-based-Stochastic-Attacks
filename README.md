@@ -23,3 +23,21 @@ The zip file SHA-256 hash value is:
 `5f9aceeabaaca2d4d9bb356f81fa47c795d25172bef5c9e10882fc93698c8869`
 
 <hr>
+
+## Citation
+
+If you use our code, models or wish to refer to our results, please use the following BibTex entry:
+```
+@article{Zaid_Bossuet_Carbone_Habrard_Venelli_2023, 
+title={Conditional Variational AutoEncoder based on Stochastic Attacks}, 
+volume={2023}, 
+url={https://tches.iacr.org/index.php/TCHES/article/view/10286}, 
+DOI={10.46586/tches.v2023.i2.310-357}, 
+number={2}, 
+journal={IACR Transactions on Cryptographic Hardware and Embedded Systems}, 
+author={Zaid, Gabriel and Bossuet, Lilian and Carbone, Mathieu and Habrard, Amaury and Venelli, Alexandre}, 
+year={2023}, 
+month={Mar.}, 
+pages={310–357} 
+}
+```
