@@ -1,5 +1,5 @@
 # Conditional Variational AutoEncoder-based on Stochastic Attacks
-The current repository is associated with the article "Conditional Variational AutoEncoder-based on Stochastic Attacks" that is under a reviewing process.
+The current repository is associated with the article "<a href='https://tches.iacr.org/index.php/TCHES/article/view/10286'>Conditional Variational AutoEncoder based on Stochastic Attacks</a>" available on <a href='https://tches.iacr.org/index.php/TCHES/index'>IACR Transactions on Cryptographic Hardware and Embedded Systems (TCHES)</a> and the <a href='https://eprint.iacr.org/'>eprints</a>.
 
 This project has been developed in Python 3.6.9.
 
